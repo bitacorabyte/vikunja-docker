@@ -16,6 +16,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
       - "traefik.http.routers.vikunja.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.vikunja.entrypoints=web"
       - "traefik.http.services.vikunja.loadbalancer.server.port=3456"
