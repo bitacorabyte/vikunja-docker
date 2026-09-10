@@ -3,8 +3,6 @@ services:
     # Hash exacto para la inmutabilidad de la imagen en tu entorno
     image: vikunja/vikunja:${VIKUNJA_VERSION}
     container_name: vikunja_app
-    env_file:
-      - .env
     environment:
       VIKUNJA_DATABASE_HOST: ${DB_HOST}
       VIKUNJA_DATABASE_TYPE: mysql
