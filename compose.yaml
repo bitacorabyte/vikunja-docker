@@ -4,6 +4,7 @@ services:
     image: vikunja/vikunja:${VIKUNJA_VERSION}
     container_name: vikunja_app
     environment:
+      VIKUNJA_SERVICE_PUBLICURL: ${VIKUNJA_SERVICE_PUBLICURL}
       VIKUNJA_DATABASE_HOST: ${DB_HOST}
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: ${DB_USER}
