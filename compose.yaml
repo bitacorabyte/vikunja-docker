@@ -1,0 +1,35 @@
+services:
+  vikunja:
+    # Hash exacto para la inmutabilidad de la imagen en tu entorno
+    image: vikunja/vikunja:${VIKUNJA_VERSION}
+    container_name: vikunja_app
+    env_file:
+      - .env
+    environment:
+      VIKUNJA_DATABASE_HOST: ${DB_HOST}
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_USER: ${DB_USER}
+      VIKUNJA_DATABASE_PASSWORD: ${DB_PASSWORD}
+      VIKUNJA_DATABASE_DATABASE: ${DB_NAME}
+      VIKUNJA_MAILER_ENABLED: "true"
+      VIKUNJA_MAILER_HOST: ${VIKUNJA_SMTP_SERVER}
+      VIKUNJA_MAILER_PORT: ${VIKUNJA_SMTP_PORT}
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vikunja.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.vikunja.entrypoints=web"
+      - "traefik.http.services.vikunja.loadbalancer.server.port=3456"
+    volumes:
+      - /opt/docker/vikunja/files:/app/vikunja/files
+    networks:
+      - traefik
+      - priv-service
+
+networks:
+  traefik:
+    name: traefik
+    external: true
+  service:
+    name: priv-service
+    external: true
