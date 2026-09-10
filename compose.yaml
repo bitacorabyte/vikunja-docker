@@ -2,7 +2,7 @@ services:
   vikunja:
     # Hash exacto para la inmutabilidad de la imagen en tu entorno
     image: vikunja/vikunja:${VIKUNJA_VERSION}
-    container_name: vikunja_app
+    container_name: vikunja
     environment:
       VIKUNJA_SERVICE_PUBLICURL: ${VIKUNJA_SERVICE_PUBLICURL}
       VIKUNJA_DATABASE_HOST: ${DB_HOST}
