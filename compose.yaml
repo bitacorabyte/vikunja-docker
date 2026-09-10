@@ -13,6 +13,7 @@ services:
       VIKUNJA_MAILER_ENABLED: "true"
       VIKUNJA_MAILER_HOST: ${VIKUNJA_SMTP_SERVER}
       VIKUNJA_MAILER_PORT: ${VIKUNJA_SMTP_PORT}
+      VIKUNJA_MAILER_PASSWORD: ${VIKUNJA_MAILER_PASSWORD}
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
