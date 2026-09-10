@@ -28,8 +28,6 @@ services:
 
 networks:
   traefik:
-    name: traefik
     external: true
-  service:
-    name: priv-service
+  priv-service:
     external: true
