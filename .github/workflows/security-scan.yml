@@ -1,0 +1,94 @@
+name: Pipeline de seguridad
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  # Permite lanzar el escaneo manualmente desde la interfaz de GitHub Actions
+  workflow_dispatch:
+
+# Permisos requeridos para subir resultados a la pestaña de Security de GitHub
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # -------------------------------------------------------------
+  # JOB 1. Prevención de fugas de datos (Credential Leakage)
+  # Analiza commits y archivos buscando más de 800 tipos de credenciales (passwords de SMTP, API keys, tokens de Gmail, claves privadas).
+  # -------------------------------------------------------------
+  scan-secrets:
+    name: TruffleHog Secret Scanner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+        with:
+          # TruffleHog analiza todo el historial de Git, no solo el último commit
+          fetch-depth: 0 
+
+      - name: Escaneo de secretos con TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+  # -------------------------------------------------------------
+  # JOB 2. Control de Calidad de IaC
+  # Verifica que las redes, variables mapeadas y directivas cumplan las especificaciones del estándar Compose.
+  # -------------------------------------------------------------
+  lint-compose:
+    name: Docker Compose Config Validator
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Validar sintaxis y referencias de variables
+        run: |
+          # Creamos un .env ficticio a partir de tu .env.example para validar el renderizado
+          if [ -f .env.example ]; then
+            cp .env.example .env
+          else
+            touch .env
+          fi
+          # docker compose config falla si hay errores de indentación o sintaxis
+          docker compose config --quiet
+          echo "Archivo docker-compose.yml sintácticamente válido."
+
+  # -------------------------------------------------------------
+  # JOB 3. Gestión de Vulnerabilidades (SCA / Patch Management)
+  # Descarga el manifiesto de la imagen Docker (vikunja/vikunja) y cruza sus paquetes instalados con bases de datos públicas de exploits (NVD, CVE).
+  # -------------------------------------------------------------
+  scan-vulnerabilities:
+    name: 🛡️ Trivy Container Vulnerability Scan
+    runs-on: ubuntu-latest
+    needs: [lint-compose]
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      # 1. Escaneo y generación del reporte SARIF
+      - name: Escanear con Trivy y generar SARIF
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'vikunja/vikunja:2.6.0'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1' 
+          # exit-code '0' Modo Auditoría / Informativo
+          # exit-code '1' Modo bloqueantes
+          vuln-type: 'os,library'
+
+      # 2. Subida del archivo SARIF a GitHub Security
+      - name: Cargar reporte a GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        # Se ejecuta aunque el paso anterior haya encontrado fallos
+        if: always() 
+        with:
+          sarif_file: 'trivy-results.sarif'
