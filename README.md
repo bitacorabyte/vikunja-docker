@@ -18,15 +18,12 @@ Antes de desplegar este contenedor, asegúrate de cumplir con los siguientes req
   docker network create service
   docker network create traefik
 
-```
-
 * **Base de datos externa preparada:** Vikunja genera sus tablas y migraciones en el primer arranque, pero **requiere que la base de datos vacía y el usuario existan previamente** en tu MariaDB central. Accede a la consola de tu MariaDB y ejecuta:
 ```sql
 CREATE DATABASE vikunja_db;
 CREATE USER 'vikunja_user'@'%' IDENTIFIED BY 'tu_contraseña_segura';
 GRANT ALL PRIVILEGES ON vikunja_db.* TO 'vikunja_user'@'%';
 FLUSH PRIVILEGES;
-
 ```
 
 
